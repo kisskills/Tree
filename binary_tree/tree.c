@@ -63,6 +63,7 @@ struct tree* find_node(struct tree* root, int64_t key) {
     else
         return find_node(root->right, key);
 }
+
 struct tree* min(struct tree* root) {
     if (root->left == NULL)
         return root;
@@ -83,7 +84,7 @@ struct tree* rm_node(struct tree* root, int64_t key) {
                 ptr->parent->right = ptr->right;
             // free(ptr);
         } else if (ptr->left != NULL && ptr->right == NULL) {
-            ptr->right->parent = ptr->parent;
+            ptr->left->parent = ptr->parent;
             if (ptr == ptr->parent->left)
                 ptr->parent->left = ptr->left;
             else
@@ -102,12 +103,18 @@ struct tree* rm_node(struct tree* root, int64_t key) {
         return root;
     }
 }
+
 void print_tree(struct tree* root) {
     if (root->left != NULL) print_tree(root->left);
     if (root->right != NULL) print_tree(root->right);
     printf("%"PRId64" ", root->key);
 }
 
+void destroy_tree(struct tree* root) {
+    if(root->left != NULL) destroy_tree(root->left);
+    if(root->right != NULL) destroy_tree(root->right);
+    free(root);
+}
 int main() {
     struct tree* root = NULL;
     struct tree* parent = NULL;
@@ -127,6 +134,8 @@ int main() {
     rm_node(root, 900);
     print_tree(root);
     printf("\n");
+
+    destroy_tree(root);
     return 0;
 }
 
