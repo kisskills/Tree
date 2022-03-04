@@ -7,7 +7,7 @@ struct tree {
     int64_t key;
     struct tree *left;
     struct tree *right;
-    // struct tree *parent;
+    struct tree *parent;
 };
 /*
 struct tree* create_tree(struct tree* root, int64_t key) {
@@ -42,17 +42,19 @@ struct tree* add_node(struct tree* root, int64_t key) {
     return root;
 }
 */
-void add_node(struct tree** root, int64_t key) {
+
+void add_node(struct tree** root,struct tree* parent, int64_t key) {
     if (*root == NULL) {
         *root = malloc(sizeof(struct tree));
         (*root)->key = key;
         (*root)->left = (*root)->right = NULL;
-        // (*root)->parent = *root;
+        (*root)->parent = parent;
     } else {
-        if(key < (*root)->key) add_node(&((*root)->left), key);
-        if(key > (*root)->key) add_node(&((*root)->right), key);
+        if(key < (*root)->key) add_node(&((*root)->left), *root, key);
+        if(key > (*root)->key) add_node(&((*root)->right), *root, key);
     }
 }
+
 struct tree* find_node(struct tree* root, int64_t key) {
     if (root == NULL || root->key == key)
         return root;
@@ -66,20 +68,65 @@ struct tree* min(struct tree* root) {
         return root;
     return min(root->left);
 }
+
+struct tree* rm_node(struct tree* root, int64_t key) {
+    struct tree* ptr = find_node(root, key);
+    if (ptr) {
+        if (ptr->left != NULL && ptr->right != NULL) {
+            ptr->key = min(ptr->right)->key;
+            return rm_node(ptr->right, ptr->key);
+        } else if (ptr->left == NULL && ptr->right != NULL) {
+            ptr->right->parent = ptr->parent;
+            if (ptr == ptr->parent->left)
+                ptr->parent->left = ptr->right;
+            else
+                ptr->parent->right = ptr->right;
+            // free(ptr);
+        } else if (ptr->left != NULL && ptr->right == NULL) {
+            ptr->right->parent = ptr->parent;
+            if (ptr == ptr->parent->left)
+                ptr->parent->left = ptr->left;
+            else
+                ptr->parent->right = ptr->left;
+            // free(ptr);
+        } else {
+            if (ptr == ptr->parent->left)
+                ptr->parent->left = NULL;
+            else 
+                ptr->parent->right = NULL;
+            // free(ptr);
+        }
+        free(ptr);
+        return root;
+    } else {
+        return root;
+    }
+}
 void print_tree(struct tree* root) {
     if (root->left != NULL) print_tree(root->left);
     if (root->right != NULL) print_tree(root->right);
-    printf("%"PRId64, root->key);
+    printf("%"PRId64" ", root->key);
 }
+
 int main() {
     struct tree* root = NULL;
+    struct tree* parent = NULL;
     // root = create_tree(root, 2);
-    add_node(&root, 2);
-    add_node(&root, 1);
-    add_node(&root, 4);
+    add_node(&root, parent, 9);
+    add_node(&root, parent, 3);
+    add_node(&root, parent, 7);
+    add_node(&root, parent, 8);
+    add_node(&root, parent, 4);
+    add_node(&root, parent, 6);
+    add_node(&root, parent, 1);
+    add_node(&root, parent, 0);
     print_tree(root);
     printf("\n");
-    printf("%p %p\n", root, root->parent);
+
+    rm_node(root, 3);
+    rm_node(root, 900);
+    print_tree(root);
+    printf("\n");
     return 0;
 }
 
